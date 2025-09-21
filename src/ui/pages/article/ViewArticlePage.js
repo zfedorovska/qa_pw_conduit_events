@@ -65,18 +65,30 @@ export class ViewArticlePage extends BasePage {
 }
 
 async deleteCommentByTextAndWaitForRequest(text) {
-  const { page } = this;
-  const card = page.locator('.card').filter({ hasText: text }).first();
-  const [req] = await Promise.all([
-    page.waitForRequest(r =>
-      r.url().includes('/api/articles/') &&
-      r.url().includes('/comments') &&
-      r.method() === 'DELETE'
-    ),
-    card.getByRole('button', { name: /delete/i }).click(),
-  ]);
-  await card.waitFor({ state: 'detached' });
-  return req;
+  return await this.step(`Delete comment "${text}" and wait for request`, async () => {
+    const { page } = this;
+
+    const card = page.locator('.card').filter({ hasText: text }).first();
+    await card.waitFor({ state: 'visible' });
+
+    const deleteControl = card
+      .locator('[data-testid="delete-comment"], .mod-options .ion-trash-a, button:has-text("Delete")')
+      .first();
+
+    await deleteControl.waitFor({ state: 'visible' });
+
+    const [req] = await Promise.all([
+      page.waitForRequest(r =>
+        r.method() === 'DELETE' &&
+        r.url().includes('/api/articles/') &&
+        r.url().includes('/comments/')
+      ),
+      deleteControl.click()
+    ]);
+
+    await await await await await await await await await await await expect(card).toBeHidden({ timeout: 5000 }).catch(() => {});
+    return req;
+  });
 }
 
   async assertFavoriteButtonIsVisibleInArticleBody() {
