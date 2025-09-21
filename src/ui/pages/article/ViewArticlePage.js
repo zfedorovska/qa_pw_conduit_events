@@ -48,6 +48,37 @@ export class ViewArticlePage extends BasePage {
     );
   }
 
+  async addCommentAndWaitForRequest(text) {
+  const { page } = this;
+  await page.getByPlaceholder(/write a comment/i).fill(text);
+  const [req] = await Promise.all([
+    page.waitForRequest(r =>
+      r.url().includes('/api/articles/') &&
+      r.url().includes('/comments') &&
+      r.method() === 'POST'
+    ),
+    page.getByRole('button', { name: /post comment/i }).click(),
+  ]);
+  // Ensure the comment renders before returning
+  await page.locator('.card').filter({ hasText: text }).first().waitFor();
+  return req;
+}
+
+async deleteCommentByTextAndWaitForRequest(text) {
+  const { page } = this;
+  const card = page.locator('.card').filter({ hasText: text }).first();
+  const [req] = await Promise.all([
+    page.waitForRequest(r =>
+      r.url().includes('/api/articles/') &&
+      r.url().includes('/comments') &&
+      r.method() === 'DELETE'
+    ),
+    card.getByRole('button', { name: /delete/i }).click(),
+  ]);
+  await card.waitFor({ state: 'detached' });
+  return req;
+}
+
   async assertFavoriteButtonIsVisibleInArticleBody() {
     await this.step(
       `Assert the Favorite article button is shown in article body`,

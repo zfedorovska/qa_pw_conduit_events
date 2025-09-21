@@ -28,6 +28,17 @@ export class SignInPage extends BasePage {
     });
   }
 
+  async clickSignInButtonAndWaitForRequest() {
+  const { page } = this;
+  const [req] = await Promise.all([
+    page.waitForRequest(r =>
+      r.url().includes('/api/users') && r.method() === 'POST'
+    ),
+    this.getByRole('button', { name: /sign in/i }).click(),
+  ]);
+  return req;
+}
+
   async assertErrorMessageContainsText(messageText) {
     await this.step(`Assert the '${messageText}' error is shown`, async () => {
       await expect(this.errorMessage).toContainText(messageText);
